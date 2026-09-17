@@ -113,7 +113,7 @@ export function resolveTransitRoute(url) {
 export function transitUpstreamHeaders(feed, validators = null) {
   return {
     'User-Agent':
-      'gods-eye-view-transit-proxy/1.0 (+https://github.com/bilawalsidhu/gods-eye-view)',
+      'world-eyes-view-transit-proxy/1.0 (+https://github.com/dvilrgamerz/world-eyes-views-)',
     Accept: 'application/x-protobuf, application/octet-stream;q=0.9, */*;q=0.1',
     'Accept-Encoding': 'gzip',
     ...(validators?.etag ? { 'If-None-Match': validators.etag } : {}),
