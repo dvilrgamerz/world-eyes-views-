@@ -124,7 +124,7 @@ test('every mirror is asked with a User-Agent that identifies the application', 
     const agent = String(request.agent || '');
     assert.match(
       agent,
-      /^gods-eye-view\/\d/,
+      /^world-eyes-view\/\d/,
       `${request.url} must name the application and its version`,
     );
     assert.ok(
@@ -133,7 +133,7 @@ test('every mirror is asked with a User-Agent that identifies the application', 
     );
     assert.match(
       agent,
-      /github\.com\/bilawalsidhu\/gods-eye-view/,
+      /github\.com\/dvilrgamerz\/world-eyes-views-/,
       `${request.url} must carry a route back to the project`,
     );
   }
