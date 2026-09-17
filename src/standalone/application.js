@@ -14,6 +14,7 @@ let constructed = false;
 export function createStandaloneApplication({
   googleApiKey,
   cesiumToken,
+  safeMode = false,
   geospatial = {},
   voice = {},
   allowQaRegistration = false,
@@ -40,6 +41,7 @@ export function createStandaloneApplication({
         ...context,
         googleApiKey,
         cesiumToken,
+        safeMode,
         loaderStatus,
       });
       catalog = createStandaloneCatalog({
