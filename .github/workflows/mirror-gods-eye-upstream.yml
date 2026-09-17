@@ -46,21 +46,13 @@ jobs:
           git submodule update --init --recursive || true
           echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
-      - name: Preserve mirror workflow
-        shell: bash
-        run: |
-          mkdir -p /tmp/world-eyes-preserve/.github/workflows
-          cp .github/workflows/mirror-gods-eye-upstream.yml /tmp/world-eyes-preserve/.github/workflows/
-
-      - name: Mirror every upstream file
+      - name: Mirror every upstream file except workflow YAML
         shell: bash
         run: |
           rsync -a --delete \
             --exclude='.git/' \
-            --exclude='.github/workflows/mirror-gods-eye-upstream.yml' \
+            --exclude='.github/workflows/' \
             /tmp/gods-eye-view/ ./
-          mkdir -p .github/workflows
-          cp /tmp/world-eyes-preserve/.github/workflows/mirror-gods-eye-upstream.yml .github/workflows/
 
       - name: Add World Eyes View attribution notice
         shell: bash
