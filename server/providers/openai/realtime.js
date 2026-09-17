@@ -14,6 +14,26 @@ import {
 import { realtimeInstructions } from './instructions.js';
 import { GEV_REALTIME_TOOLS } from './tools.js';
 
+function worldEyesBrandText(value) {
+  return String(value || '')
+    .replaceAll("God's Eye View", 'World Eyes View')
+    .replace(/\bGEV\b/g, 'WEV');
+}
+
+function worldEyesBrandValue(value) {
+  if (typeof value === 'string') return worldEyesBrandText(value);
+  if (Array.isArray(value)) return value.map(worldEyesBrandValue);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => [
+      key,
+      worldEyesBrandValue(entry),
+    ]),
+  );
+}
+
+const WORLD_EYES_REALTIME_TOOLS = GEV_REALTIME_TOOLS.map(worldEyesBrandValue);
+
 function createRealtimeTokenHandler({
   annotationGuidance,
   endpoint = 'https://api.openai.com/v1/realtime/client_secrets',
@@ -112,8 +132,10 @@ function createRealtimeTokenHandler({
           },
           output: { voice },
         },
-        instructions: realtimeInstructions(annotationGuidance),
-        tools: GEV_REALTIME_TOOLS,
+        instructions: worldEyesBrandText(
+          realtimeInstructions(annotationGuidance),
+        ),
+        tools: WORLD_EYES_REALTIME_TOOLS,
         tool_choice: 'auto',
       },
     };
