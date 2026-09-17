@@ -1,0 +1,20 @@
+{
+  "name": "world-eyes-view",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Open-data 3D world dashboard for news, aircraft, satellites, earthquakes, and trade.",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "check": "node --check src/app.js"
+  },
+  "dependencies": {
+    "satellite.js": "^6.0.2"
+  },
+  "devDependencies": {
+    "netlify-cli": "^23.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
