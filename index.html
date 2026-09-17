@@ -1,181 +1,39 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#02060a" />
-  <meta name="description" content="World Eyes View — a real-time and near-real-time open-source world intelligence dashboard." />
-  <title>World Eyes View // Live World Intelligence</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/Widgets/widgets.css" />
-  <link rel="stylesheet" href="/v2.css" />
-  <script>window.CESIUM_BASE_URL='https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/';</script>
-  <script src="https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/Cesium.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>God's Eye View</title>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Icon font subset to the glyphs this app renders. Keep `icon_names` in sync
+       with the sources: src/materialSymbolsSubset.test.mjs fails when a source
+       names a glyph this list is missing, because a missing glyph does not draw
+       a box — the ligature never forms and the element renders the literal word. -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,view_in_ar" rel="stylesheet" />
 </head>
 <body>
-  <div id="app" class="app-shell sensor-normal">
-    <div id="cesiumContainer" aria-label="Interactive live world globe"></div>
-    <div class="world-vignette" aria-hidden="true"></div>
-    <div class="scanlines" aria-hidden="true"></div>
-    <div class="hud-grid" aria-hidden="true"></div>
-    <div class="center-reticle" aria-hidden="true"><i></i><b></b></div>
+  <!-- gev:template scene-chrome -->
 
-    <header class="topbar glass">
-      <div class="brand-wrap">
-        <button id="menuButton" class="icon-button mobile-only" aria-label="Open layers">☰</button>
-        <div class="brand-orb"><span></span></div>
-        <div>
-          <div class="brand">WORLD EYES <strong>VIEW</strong> <em>V2</em></div>
-          <div class="subtitle">OPEN-SOURCE WORLD SIGNAL FUSION</div>
-        </div>
-      </div>
+  <!-- gev:template cockpit -->
 
-      <form id="globalSearchForm" class="global-search-wrap" autocomplete="off">
-        <span class="search-icon">⌕</span>
-        <input id="globalSearch" type="search" placeholder="Search place, callsign, satellite, vessel, launch…" aria-label="Search world" />
-        <kbd>/</kbd>
-        <div id="searchResults" class="search-results" hidden></div>
-      </form>
+  <!-- gev:template display-controls -->
 
-      <div class="top-status">
-        <button id="hudToggle" class="compact-button" title="Toggle HUD">HUD</button>
-        <div class="live-chip"><span class="live-dot"></span><span id="linkState">LINKING</span></div>
-        <div id="utcClock" class="utc-clock">--:--:-- UTC</div>
-      </div>
-    </header>
+  <!-- gev:template command-dock -->
 
-    <aside id="leftPanel" class="left-panel glass panel">
-      <div class="panel-heading">
-        <span>WORLD LAYERS</span>
-        <button id="closeLayers" class="icon-button mobile-only" aria-label="Close layers">×</button>
-      </div>
+  <!-- gev:template layer-panels -->
 
-      <div class="layer-section-label">MOVEMENT</div>
-      <div class="layer-list">
-        <label class="layer-row"><input id="layerFlights" data-layer="flights" type="checkbox" checked /><span class="layer-symbol flights">✈</span><span class="layer-copy"><b>Live Aircraft</b><small>OpenSky</small></span><span id="countFlights" class="count">0</span></label>
-        <label class="layer-row"><input id="layerMilitary" data-layer="military" type="checkbox" checked /><span class="layer-symbol military">▲</span><span class="layer-copy"><b>Military Aircraft</b><small>adsb.lol</small></span><span id="countMilitary" class="count">0</span></label>
-        <label class="layer-row"><input id="layerVessels" data-layer="vessels" type="checkbox" /><span class="layer-symbol vessels">◆</span><span class="layer-copy"><b>Live Vessels</b><small>AISStream key required</small></span><span id="countVessels" class="count">0</span></label>
-        <label class="layer-row"><input id="layerSatellites" data-layer="satellites" type="checkbox" checked /><span class="layer-symbol satellites">◈</span><span class="layer-copy"><b>Satellites</b><small>CelesTrak + SGP4</small></span><span id="countSatellites" class="count">0</span></label>
-      </div>
+  <!-- gev:template context -->
 
-      <div class="layer-section-label">PLANET</div>
-      <div class="layer-list">
-        <label class="layer-row"><input id="layerQuakes" data-layer="quakes" type="checkbox" checked /><span class="layer-symbol quakes">◉</span><span class="layer-copy"><b>Earthquakes</b><small>USGS M2.5+</small></span><span id="countQuakes" class="count">0</span></label>
-        <label class="layer-row"><input id="layerEvents" data-layer="events" type="checkbox" checked /><span class="layer-symbol events">✦</span><span class="layer-copy"><b>Natural Events</b><small>NASA EONET</small></span><span id="countEvents" class="count">0</span></label>
-        <label class="layer-row"><input id="layerLaunches" data-layer="launches" type="checkbox" checked /><span class="layer-symbol launches">↑</span><span class="layer-copy"><b>Rocket Launches</b><small>Launch Library 2</small></span><span id="countLaunches" class="count">0</span></label>
-        <label class="layer-row"><input id="layerInfrastructure" data-layer="infrastructure" type="checkbox" /><span class="layer-symbol infrastructure">▦</span><span class="layer-copy"><b>Infrastructure</b><small>OSM near view</small></span><span id="countInfrastructure" class="count">0</span></label>
-        <label class="layer-row"><input id="layerTrade" data-layer="trade" type="checkbox" /><span class="layer-symbol trade">$</span><span class="layer-copy"><b>Global Trade</b><small>latest annual</small></span><span id="countTrade" class="count">0</span></label>
-      </div>
+  <!-- gev:template welcome -->
 
-      <div class="separator"></div>
+  <!-- gev:template provider-settings -->
 
-      <div class="control-grid">
-        <label class="control-group"><span>SATELLITES</span><select id="satelliteGroup"><option value="active">Active sample</option><option value="stations">Space stations</option><option value="starlink">Starlink</option><option value="gps-ops">GPS</option><option value="weather">Weather</option><option value="geo">Geosynchronous</option><option value="science">Science</option><option value="cubesat">CubeSats</option></select></label>
-        <label class="control-group"><span>NATURAL EVENTS</span><select id="eventCategory"><option value="">All active</option><option value="wildfires">Wildfires</option><option value="severeStorms">Severe storms</option><option value="volcanoes">Volcanoes</option><option value="floods">Floods</option><option value="seaLakeIce">Sea/lake ice</option></select></label>
-        <label class="control-group"><span>INFRASTRUCTURE</span><select id="infrastructureKind"><option value="all">Datacenters + dams</option><option value="datacenters">Datacenters</option><option value="dams">Dams</option></select></label>
-        <label class="control-group"><span>BASEMAP</span><select id="mapStyle"><option value="satellite">Satellite</option><option value="street">Street</option><option value="dark">Dark</option></select></label>
-        <label class="control-group"><span>SENSOR</span><select id="sensorStyle"><option value="normal">Normal</option><option value="crt">CRT</option><option value="nvg">NVG</option><option value="thermal">Thermal</option><option value="noir">Noir</option></select></label>
-      </div>
+  <!-- gev:template hud-loading -->
 
-      <div class="control-actions">
-        <button id="refreshButton" class="action-button">↻ REFRESH ACTIVE</button>
-        <button id="homeButton" class="action-button secondary">◎ RESET GLOBE</button>
-        <button id="shareButton" class="action-button secondary">↗ COPY VIEW</button>
-      </div>
-
-      <div class="separator"></div>
-      <div class="health-grid">
-        <div><span id="healthNews" class="health-dot idle"></span><span>News</span><small id="ageNews">waiting</small></div>
-        <div><span id="healthFlights" class="health-dot idle"></span><span>Aircraft</span><small id="ageFlights">waiting</small></div>
-        <div><span id="healthMilitary" class="health-dot idle"></span><span>Military</span><small id="ageMilitary">waiting</small></div>
-        <div><span id="healthVessels" class="health-dot idle"></span><span>Vessels</span><small id="ageVessels">off</small></div>
-        <div><span id="healthSatellites" class="health-dot idle"></span><span>Satellites</span><small id="ageSatellites">waiting</small></div>
-        <div><span id="healthQuakes" class="health-dot idle"></span><span>Quakes</span><small id="ageQuakes">waiting</small></div>
-        <div><span id="healthEvents" class="health-dot idle"></span><span>Events</span><small id="ageEvents">waiting</small></div>
-        <div><span id="healthLaunches" class="health-dot idle"></span><span>Launches</span><small id="ageLaunches">waiting</small></div>
-      </div>
-    </aside>
-
-    <section class="ticker glass" aria-label="Latest world news">
-      <span class="ticker-label">WORLD FEED</span>
-      <div class="ticker-window"><div id="tickerTrack" class="ticker-track"><span>Connecting to global news…</span></div></div>
-      <button id="newsButton" class="ticker-button">INTEL FEED ›</button>
-    </section>
-
-    <aside id="rightPanel" class="right-panel glass panel">
-      <div class="panel-heading">
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="signals">SIGNALS</button>
-          <button class="tab" data-tab="news">NEWS</button>
-          <button class="tab" data-tab="launches">LAUNCHES</button>
-          <button class="tab" data-tab="data">DATA</button>
-        </div>
-        <button id="closeRight" class="icon-button mobile-only" aria-label="Close feed">×</button>
-      </div>
-
-      <div id="tabSignals" class="tab-panel active">
-        <div class="metric-grid">
-          <div class="metric"><small>AIR</small><strong id="metricFlights">0</strong><span>civil</span></div>
-          <div class="metric"><small>MIL</small><strong id="metricMilitary">0</strong><span>aircraft</span></div>
-          <div class="metric"><small>ORBIT</small><strong id="metricSatellites">0</strong><span>satellites</span></div>
-          <div class="metric"><small>EVENTS</small><strong id="metricEvents">0</strong><span>planet</span></div>
-        </div>
-        <div class="section-title">RECENT SIGNALS</div>
-        <div id="signalList" class="card-list"></div>
-      </div>
-
-      <div id="tabNews" class="tab-panel">
-        <div class="feed-toolbar"><input id="newsQuery" type="search" value="world" placeholder="Search world news" /><button id="newsSearchButton" class="mini-button">SEARCH</button></div>
-        <div id="newsList" class="card-list"></div>
-      </div>
-
-      <div id="tabLaunches" class="tab-panel">
-        <div class="data-note">Upcoming launch locations and times are sourced from Launch Library 2 and can change as providers update schedules.</div>
-        <div id="launchList" class="card-list"></div>
-      </div>
-
-      <div id="tabData" class="tab-panel">
-        <div class="data-note">“Live” means the provider is being polled or streamed. Trade is annual, satellites are propagated from orbital elements, and some open-data services are rate-limited.</div>
-        <div id="dataStatusList" class="card-list compact-list"></div>
-      </div>
-    </aside>
-
-    <div id="objectHud" class="object-hud glass" hidden>
-      <div><small id="objectHudType">TARGET</small><b id="objectHudTitle">—</b></div>
-      <span id="objectHudMeta">—</span>
-    </div>
-
-    <div class="bottom-hud glass">
-      <span id="cameraCoords">LAT 0.0000° // LON 0.0000°</span>
-      <span id="cameraAltitude" class="desktop-only">ALT —</span>
-      <span class="desktop-only">1 NORMAL · 2 CRT · 3 NVG · 4 THERMAL · 5 NOIR</span>
-      <span id="connectionState">INITIALIZING</span>
-    </div>
-
-    <nav class="mobile-nav glass mobile-only" aria-label="Dashboard controls">
-      <button data-mobile-action="layers">☷<span>Layers</span></button>
-      <button data-mobile-action="home">◎<span>Globe</span></button>
-      <button data-mobile-action="feed">▤<span>Feed</span></button>
-    </nav>
-
-    <dialog id="detailDialog" class="detail-dialog glass">
-      <button id="detailClose" class="dialog-close" aria-label="Close">×</button>
-      <div id="detailType" class="detail-kicker">SIGNAL</div>
-      <h2 id="detailTitle">Object</h2>
-      <div id="detailBody" class="detail-body"></div>
-      <div class="dialog-actions">
-        <button id="trackButton" class="action-button">TRACK / FLY TO</button>
-        <button id="cockpitButton" class="action-button secondary">COCKPIT</button>
-        <button id="trailButton" class="action-button secondary">TRAIL</button>
-        <a id="sourceButton" class="action-button secondary link-button" target="_blank" rel="noopener noreferrer" hidden>SOURCE ↗</a>
-      </div>
-    </dialog>
-
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <div id="loadingBar" class="loading-bar"></div>
-  </div>
-
-  <noscript>This dashboard requires JavaScript.</noscript>
-  <script src="/src/world-eyes-v2.js" defer></script>
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>
