@@ -39,7 +39,7 @@ export async function captureViewportImage() {
   try {
     ctx.drawImage(source, 0, 0, width, height);
     if (isNearlyBlackFrame(ctx, width, height)) {
-      console.warn('[GEV Voice] Skipped black Cesium viewport capture');
+      console.warn('[World Eyes Voice] Skipped black Cesium viewport capture');
       return null;
     }
     const dataUrl = canvas.toDataURL('image/jpeg', 0.74);
@@ -47,7 +47,7 @@ export async function captureViewportImage() {
     // would still overflow the data channel, skip the image rather than let the
     // send throw and strand the turn (M13). The caller falls through without it.
     if (estimateDataUrlBytes(dataUrl) > VIEWPORT_MAX_ENCODED_BYTES) {
-      console.warn('[GEV Voice] Skipped oversized viewport capture', {
+      console.warn('[World Eyes Voice] Skipped oversized viewport capture', {
         bytes: estimateDataUrlBytes(dataUrl),
         limit: VIEWPORT_MAX_ENCODED_BYTES,
       });
@@ -237,7 +237,7 @@ export class RealtimeViewport {
         content: [
           {
             type: 'input_text',
-            text: "Current God's Eye View viewport screenshot. Read any clearly visible street, building, and place labels in the image and combine them with the structured nearbyPlaces, streetLabels, and scene context. Do not invent labels that are not legible.",
+            text: 'Current World Eyes View viewport screenshot. Read any clearly visible street, building, and place labels in the image and combine them with the structured nearbyPlaces, streetLabels, and scene context. Do not invent labels that are not legible.',
           },
           {
             type: 'input_image',
