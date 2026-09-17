@@ -20,12 +20,5 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: npm install --ignore-scripts
-      - name: Check browser JavaScript syntax
-        run: node --check src/app.js
-      - name: Check serverless function syntax
-        run: |
-          node --check netlify/functions/news.mjs
-          node --check netlify/functions/flights.mjs
-          node --check netlify/functions/satellites.mjs
-          node --check netlify/functions/quakes.mjs
-          node --check netlify/functions/trade.mjs
+      - name: Syntax checks
+        run: npm run check
