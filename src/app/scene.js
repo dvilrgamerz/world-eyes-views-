@@ -12,11 +12,20 @@ import {
 } from '../renderGovernor.js';
 import { describeError } from './errors.js';
 
+function markSceneBoot(stage, details = {}) {
+  if (typeof window === 'undefined') return;
+  const event = { stage, at: Math.round(performance.now()), ...details };
+  if (Array.isArray(window.__WEV_BOOT__)) window.__WEV_BOOT__.push(event);
+  document.documentElement.dataset.wevBootStage = stage;
+  console.info('[WEV:BOOT]', event);
+}
+
 /** Construct the application globe using the caller's local configuration. */
 export async function createApplicationScene({
   requestServices,
   googleApiKey,
   cesiumToken,
+  safeMode = false,
   credits,
   MapController = MapStackController,
   mapOptions = {},
@@ -38,7 +47,9 @@ export async function createApplicationScene({
       else window.__GOOGLE_MAPS_API_KEY__ = previousKey;
     });
   }
-  loaderStatus.textContent = 'Configuring viewer...';
+  loaderStatus.textContent = safeMode
+    ? 'Safe mode: configuring recovery globe...'
+    : 'Configuring viewer...';
   // Provider attribution stays visible, including clean-view and recording.
   const creditContainer = document.createElement('div');
   creditContainer.id = 'cesium-credits';
@@ -48,20 +59,27 @@ export async function createApplicationScene({
     container: 'cesiumContainer',
     creditContainer,
   });
+  markSceneBoot('VIEWER_CREATED', { safeMode });
+  document.documentElement.dataset.wevRenderState = 'core-visible';
   defer(() => {
     uninstallRenderGovernor(viewer);
     if (!viewer.isDestroyed()) viewer.destroy();
   });
   registerDataCredits(viewer, credits);
   configureCreditKeyboardAccess(document);
-  loaderStatus.textContent =
-    googleApiKey || cesiumToken
+
+  loaderStatus.textContent = safeMode
+    ? 'Safe mode: loading the keyless globe...'
+    : googleApiKey || cesiumToken
       ? 'Loading Google 3D Tiles...'
       : 'Loading the keyless globe...';
-  const photoreal = await loadPhotorealisticTileset(Cesium, {
-    googleApiKey,
-    cesiumToken,
-  });
+
+  const photoreal = safeMode
+    ? { tileset: null, route: 'safe-mode', errors: [] }
+    : await loadPhotorealisticTileset(Cesium, {
+        googleApiKey,
+        cesiumToken,
+      });
   const tileset = photoreal.tileset;
   // A provider can finish after cancellation; retain ownership of its result.
   defer(() => {
@@ -75,8 +93,13 @@ export async function createApplicationScene({
     // NOTE: Cesium World Terrain intentionally disabled — conflicts with Google 3D Tiles at high zoom.
     // Google Photorealistic 3D Tiles provide their own terrain/elevation.
     viewer.scene.globe.show = false;
+    markSceneBoot('OPTIONAL_3D_READY', { route: photoreal.route });
     console.info(`[Init] Google 3D Tiles loaded via ${photoreal.route}.`);
   } else {
+    // The viewer already exposes a provider-independent recovery globe. Keep it
+    // visible while Esri/OSM imagery starts so provider failures cannot produce
+    // a completely black canvas.
+    viewer.scene.globe.show = true;
     if (photoreal.errors.length) {
       const tileError = photoreal.errors.at(-1);
       console.warn(
@@ -86,10 +109,12 @@ export async function createApplicationScene({
       const tileErrorDetail = describeError(tileError);
       loaderStatus.textContent = `Google 3D Tiles unavailable (${tileErrorDetail}). Loading the keyless globe...`;
     }
-    viewer.scene.globe.show = true;
+    markSceneBoot('KEYLESS_GLOBE_VISIBLE', { safeMode });
   }
 
-  loaderStatus.textContent = 'Initializing systems...';
+  loaderStatus.textContent = safeMode
+    ? 'Safe mode: initializing core systems...'
+    : 'Initializing systems...';
 
   const mapStackController = new MapController(viewer, {
     requestRender: governorRequestRender,
@@ -110,10 +135,29 @@ export async function createApplicationScene({
     onError: (message) => console.warn('[MapStack]', message),
   });
   defer(() => mapStackController.destroy());
-  await mapStackController.setStack(tileset ? 'photoreal' : 'esri-imagery', {
-    silent: true,
-  });
+  const mapState = await mapStackController.setStack(
+    tileset ? 'photoreal' : 'esri-imagery',
+    { silent: true },
+  );
 
+  if (!tileset) {
+    // Even when Esri and OSM both fail, the colored recovery globe remains
+    // visible and interactive. This is intentionally independent of network
+    // providers so startup can always produce a useful first frame.
+    viewer.scene.globe.show = true;
+    viewer.scene.requestRender();
+    if (mapState?.lastError) {
+      loaderStatus.textContent =
+        'Map imagery is unavailable. Showing the recovery globe; provider layers can retry later.';
+      markSceneBoot('BASEMAP_DEGRADED', { error: mapState.lastError });
+    } else {
+      markSceneBoot('BASEMAP_READY', { stack: mapState?.activeId || 'unknown' });
+    }
+  } else {
+    markSceneBoot('BASEMAP_READY', { stack: 'photoreal' });
+  }
+
+  document.documentElement.dataset.wevRenderState = 'ready';
   signal.throwIfAborted();
   return { viewer, tileset, mapStackController, operations };
 }
