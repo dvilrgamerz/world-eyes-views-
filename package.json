@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "netlify dev",
-    "check": "node --check src/world-eyes-v2.js && node --check netlify/functions/flights.mjs && node --check netlify/functions/military.mjs && node --check netlify/functions/satellites.mjs && node --check netlify/functions/quakes.mjs && node --check netlify/functions/events.mjs && node --check netlify/functions/launches.mjs && node --check netlify/functions/infrastructure.mjs && node --check netlify/functions/vessels.mjs && node --check netlify/functions/news.mjs && node --check netlify/functions/trade.mjs"
+    "check": "node --check src/world-eyes-v2.js && node --check netlify/functions/news.mjs && node --check netlify/functions/flights.mjs && node --check netlify/functions/military.mjs && node --check netlify/functions/satellites.mjs && node --check netlify/functions/quakes.mjs && node --check netlify/functions/events.mjs && node --check netlify/functions/launches.mjs && node --check netlify/functions/infrastructure.mjs && node --check netlify/functions/vessels.mjs && node --check netlify/functions/geocode.mjs && node --check netlify/functions/trade.mjs"
   },
   "dependencies": {
     "satellite.js": "^6.0.2",
