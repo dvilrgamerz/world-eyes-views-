@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05080d" />
+  <meta name="description" content="World Eyes View — an open-data live world dashboard for news, aircraft, satellites, earthquakes and trade." />
+  <title>World Eyes View</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/Widgets/widgets.css" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script>window.CESIUM_BASE_URL='https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/';</script>
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.132.0/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <div id="cesiumContainer" aria-label="Interactive world globe"></div>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="reticle" aria-hidden="true"><span></span></div>
+
+    <header class="topbar glass">
+      <div class="brand-wrap">
+        <button id="menuButton" class="icon-button mobile-only" aria-label="Open layers">☰</button>
+        <div class="brand-mark">◎</div>
+        <div>
+          <div class="brand">WORLD EYES <b>VIEW</b></div>
+          <div class="subtitle">OPEN WORLD SIGNALS // PUBLIC DATA</div>
+        </div>
+      </div>
+
+      <div class="global-search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="globalSearch" type="search" autocomplete="off" placeholder="Search loaded flight, satellite, country…" aria-label="Search loaded world objects" />
+        <kbd>/</kbd>
+      </div>
+
+      <div class="top-status">
+        <div class="live-chip"><span class="live-dot"></span> LIVE</div>
+        <div id="utcClock" class="utc-clock">--:--:-- UTC</div>
+      </div>
+    </header>
+
+    <aside id="leftPanel" class="left-panel glass panel">
+      <div class="panel-heading">
+        <span>LAYERS</span>
+        <button id="closeLayers" class="icon-button mobile-only" aria-label="Close layers">×</button>
+      </div>
+
+      <div class="layer-list">
+        <label class="layer-row">
+          <input id="layerFlights" type="checkbox" checked />
+          <span class="layer-symbol flight">✈</span>
+          <span class="layer-copy"><b>Aircraft</b><small>OpenSky state vectors</small></span>
+          <span id="countFlights" class="count">0</span>
+        </label>
+        <label class="layer-row">
+          <input id="layerSatellites" type="checkbox" checked />
+          <span class="layer-symbol satellite">◈</span>
+          <span class="layer-copy"><b>Satellites</b><small>CelesTrak + SGP4</small></span>
+          <span id="countSatellites" class="count">0</span>
+        </label>
+        <label class="layer-row">
+          <input id="layerQuakes" type="checkbox" checked />
+          <span class="layer-symbol quake">◉</span>
+          <span class="layer-copy"><b>Earthquakes</b><small>USGS M2.5+ / 24h</small></span>
+          <span id="countQuakes" class="count">0</span>
+        </label>
+        <label class="layer-row">
+          <input id="layerTrade" type="checkbox" checked />
+          <span class="layer-symbol trade">◆</span>
+          <span class="layer-copy"><b>Trade</b><small>Latest annual data</small></span>
+          <span id="countTrade" class="count">0</span>
+        </label>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="control-group">
+        <label for="satelliteGroup">SATELLITE GROUP</label>
+        <select id="satelliteGroup">
+          <option value="active">Active sample</option>
+          <option value="stations">Space stations</option>
+          <option value="starlink">Starlink sample</option>
+          <option value="gps-ops">GPS operational</option>
+          <option value="weather">Weather</option>
+          <option value="geo">Geosynchronous</option>
+          <option value="science">Science</option>
+          <option value="cubesat">CubeSats</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="mapStyle">BASEMAP</label>
+        <select id="mapStyle">
+          <option value="satellite">Satellite imagery</option>
+          <option value="street">Street map</option>
+          <option value="dark">Dark map</option>
+        </select>
+      </div>
+
+      <div class="control-actions">
+        <button id="refreshButton" class="action-button">↻ REFRESH ALL</button>
+        <button id="homeButton" class="action-button secondary">◎ RESET GLOBE</button>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="feed-health">
+        <div><span id="healthNews" class="health-dot idle"></span><span>News</span><small id="ageNews">waiting</small></div>
+        <div><span id="healthFlights" class="health-dot idle"></span><span>Aircraft</span><small id="ageFlights">waiting</small></div>
+        <div><span id="healthSatellites" class="health-dot idle"></span><span>Satellites</span><small id="ageSatellites">waiting</small></div>
+        <div><span id="healthQuakes" class="health-dot idle"></span><span>Earthquakes</span><small id="ageQuakes">waiting</small></div>
+        <div><span id="healthTrade" class="health-dot idle"></span><span>Trade</span><small id="ageTrade">waiting</small></div>
+      </div>
+    </aside>
+
+    <section class="ticker glass" aria-label="Latest world news">
+      <span class="ticker-label">WORLD FEED</span>
+      <div class="ticker-window"><div id="tickerTrack" class="ticker-track"><span>Connecting to global news…</span></div></div>
+      <button id="newsButton" class="ticker-button">OPEN FEED ›</button>
+    </section>
+
+    <aside id="rightPanel" class="right-panel glass panel">
+      <div class="panel-heading">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="signals" role="tab">SIGNALS</button>
+          <button class="tab" data-tab="news" role="tab">NEWS</button>
+          <button class="tab" data-tab="trade" role="tab">TRADE</button>
+        </div>
+        <button id="closeRight" class="icon-button mobile-only" aria-label="Close feed">×</button>
+      </div>
+      <div id="tabSignals" class="tab-panel active">
+        <div class="metric-grid">
+          <div class="metric"><small>AIRCRAFT</small><strong id="metricFlights">0</strong><span>loaded</span></div>
+          <div class="metric"><small>SATELLITES</small><strong id="metricSatellites">0</strong><span>loaded</span></div>
+          <div class="metric"><small>QUAKES</small><strong id="metricQuakes">0</strong><span>24 hours</span></div>
+          <div class="metric"><small>HEADLINES</small><strong id="metricNews">0</strong><span>recent</span></div>
+        </div>
+        <div class="section-title">RECENT SIGNALS</div>
+        <div id="signalList" class="card-list"></div>
+      </div>
+      <div id="tabNews" class="tab-panel">
+        <div class="feed-toolbar">
+          <input id="newsQuery" type="search" value="world" placeholder="Search global news" />
+          <button id="newsSearchButton" class="mini-button">SEARCH</button>
+        </div>
+        <div id="newsList" class="card-list"></div>
+      </div>
+      <div id="tabTrade" class="tab-panel">
+        <div class="data-note">Trade figures are official latest-available annual merchandise values. They are not a live shipment feed.</div>
+        <div id="tradeList" class="card-list"></div>
+      </div>
+    </aside>
+
+    <div class="bottom-hud glass">
+      <span id="cameraCoords">LAT 0.0000° // LON 0.0000°</span>
+      <span class="desktop-only">CLICK AN OBJECT FOR DETAILS</span>
+      <span id="connectionState">INITIALIZING</span>
+    </div>
+
+    <nav class="mobile-nav glass mobile-only" aria-label="Dashboard controls">
+      <button data-mobile-action="layers">☷<span>Layers</span></button>
+      <button data-mobile-action="home">◎<span>Globe</span></button>
+      <button data-mobile-action="feed">▤<span>Feed</span></button>
+    </nav>
+
+    <dialog id="detailDialog" class="detail-dialog glass">
+      <button id="detailClose" class="dialog-close" aria-label="Close">×</button>
+      <div id="detailType" class="detail-kicker">SIGNAL</div>
+      <h2 id="detailTitle">Object</h2>
+      <div id="detailBody" class="detail-body"></div>
+      <div class="dialog-actions">
+        <button id="trackButton" class="action-button">TRACK / FLY TO</button>
+      </div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="loadingBar" class="loading-bar"></div>
+  </div>
+
+  <noscript>This dashboard requires JavaScript.</noscript>
+  <script src="/src/app.js" defer></script>
+</body>
+</html>
