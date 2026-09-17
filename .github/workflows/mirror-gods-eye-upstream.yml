@@ -76,7 +76,7 @@ jobs:
       - name: Verify byte-for-byte mirror parity
         shell: bash
         run: |
-          DIFFERENCES="$(rsync -ani --delete --checksum \
+          DIFFERENCES="$(rsync -aniO --delete --checksum \
             --exclude='.git/' \
             --exclude='.github/workflows/' \
             --exclude='WORLD_EYES_NOTICE.md' \
