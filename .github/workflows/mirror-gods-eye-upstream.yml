@@ -73,6 +73,21 @@ jobs:
           World Eyes View repo: https://github.com/dvilrgamerz/world-eyes-views-
           EOF
 
+      - name: Verify byte-for-byte mirror parity
+        shell: bash
+        run: |
+          DIFFERENCES="$(rsync -ani --delete --checksum \
+            --exclude='.git/' \
+            --exclude='.github/workflows/' \
+            --exclude='WORLD_EYES_NOTICE.md' \
+            /tmp/gods-eye-view/ ./)"
+          if [ -n "$DIFFERENCES" ]; then
+            echo "Mirror parity check failed:"
+            echo "$DIFFERENCES"
+            exit 1
+          fi
+          echo "All non-workflow upstream files match ${UPSTREAM_SHA} byte-for-byte."
+
       - name: Commit full mirror
         shell: bash
         run: |
