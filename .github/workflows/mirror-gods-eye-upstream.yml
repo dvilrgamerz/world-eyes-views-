@@ -1,0 +1,95 @@
+name: Mirror full God's Eye View upstream
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mirror-gods-eye-upstream.yml'
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: 'Upstream branch, tag, or commit to mirror'
+        required: false
+        default: 'main'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mirror-gods-eye-upstream
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout World Eyes View
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve upstream ref
+        id: ref
+        shell: bash
+        run: |
+          REF="${{ github.event.inputs.upstream_ref }}"
+          if [ -z "$REF" ]; then REF="main"; fi
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+
+      - name: Clone complete upstream working tree
+        shell: bash
+        run: |
+          rm -rf /tmp/gods-eye-view
+          git clone --no-tags https://github.com/bilawalsidhu/gods-eye-view.git /tmp/gods-eye-view
+          cd /tmp/gods-eye-view
+          git checkout "${{ steps.ref.outputs.ref }}"
+          git submodule update --init --recursive || true
+          echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Preserve mirror workflow
+        shell: bash
+        run: |
+          mkdir -p /tmp/world-eyes-preserve/.github/workflows
+          cp .github/workflows/mirror-gods-eye-upstream.yml /tmp/world-eyes-preserve/.github/workflows/
+
+      - name: Mirror every upstream file
+        shell: bash
+        run: |
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.github/workflows/mirror-gods-eye-upstream.yml' \
+            /tmp/gods-eye-view/ ./
+          mkdir -p .github/workflows
+          cp /tmp/world-eyes-preserve/.github/workflows/mirror-gods-eye-upstream.yml .github/workflows/
+
+      - name: Add World Eyes View attribution notice
+        shell: bash
+        run: |
+          cat > WORLD_EYES_NOTICE.md <<EOF
+          # World Eyes View upstream mirror
+
+          This repository contains a full working-tree mirror of **bilawalsidhu/gods-eye-view** at upstream commit \`${UPSTREAM_SHA}\`, imported into the World Eyes View repository.
+
+          ## Licensing
+
+          The upstream source code is MIT licensed by Bilawal Sidhu and contributors. The original upstream **LICENSE**, copyright notice, **DATA_SOURCES.md**, model credits, and third-party attribution files are preserved and must remain with redistributed copies.
+
+          Third-party datasets, imagery, models, map services, APIs, cameras, and other assets are governed by their own licenses and provider terms. Some are non-commercial or share-alike. Do not assume the upstream MIT license applies to those materials.
+
+          Upstream: https://github.com/bilawalsidhu/gods-eye-view
+
+          World Eyes View repo: https://github.com/dvilrgamerz/world-eyes-views-
+          EOF
+
+      - name: Commit full mirror
+        shell: bash
+        run: |
+          git config user.name "World Eyes Mirror Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Already synchronized with upstream ${UPSTREAM_SHA}."
+            exit 0
+          fi
+          git commit -m "sync: full God's Eye View upstream ${UPSTREAM_SHA}"
+          git push origin HEAD:main
