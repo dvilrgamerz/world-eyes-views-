@@ -1,18 +1,18 @@
 {
-  "name": "gods-eye-view",
+  "name": "world-eyes-view",
   "private": true,
   "version": "0.1.1",
-  "description": "A real-time intelligence console for planet Earth \u2014 photorealistic 3D globe, live aircraft/ships/satellites/earthquakes/CCTV, and hands-free voice control. Runs in a browser.",
+  "description": "World Eyes View — a real-time 3D intelligence console for planet Earth with live public aircraft, ships, satellites, earthquakes, CCTV, maps, and voice control.",
   "type": "module",
   "license": "MIT",
-  "author": "Bilawal Sidhu",
-  "homepage": "https://github.com/bilawalsidhu/gods-eye-view#readme",
+  "author": "dvilrgamerz",
+  "homepage": "https://github.com/dvilrgamerz/world-eyes-views-#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bilawalsidhu/gods-eye-view.git"
+    "url": "https://github.com/dvilrgamerz/world-eyes-views-.git"
   },
   "bugs": {
-    "url": "https://github.com/bilawalsidhu/gods-eye-view/issues"
+    "url": "https://github.com/dvilrgamerz/world-eyes-views-/issues"
   },
   "engines": {
     "node": ">=24.14.0 <25 || >=26 <27"
