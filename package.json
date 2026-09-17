@@ -1,20 +1,21 @@
 {
   "name": "world-eyes-view",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Open-data 3D world dashboard for news, aircraft, satellites, earthquakes, and trade.",
+  "description": "Open-data 3D world intelligence dashboard for live and near-live public signals.",
   "type": "module",
   "scripts": {
     "dev": "netlify dev",
-    "check": "node --check src/app.js"
+    "check": "node --check src/world-eyes-v2.js && node --check netlify/functions/flights.mjs && node --check netlify/functions/military.mjs && node --check netlify/functions/satellites.mjs && node --check netlify/functions/quakes.mjs && node --check netlify/functions/events.mjs && node --check netlify/functions/launches.mjs && node --check netlify/functions/infrastructure.mjs && node --check netlify/functions/vessels.mjs && node --check netlify/functions/news.mjs && node --check netlify/functions/trade.mjs"
   },
   "dependencies": {
-    "satellite.js": "^6.0.2"
+    "satellite.js": "^6.0.2",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "netlify-cli": "^23.0.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   }
 }
